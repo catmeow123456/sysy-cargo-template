@@ -1,4 +1,4 @@
-use crate::ast::{Stmt, Block, FuncType, FuncDef, CompUnit};
+use crate::ast::{Stmt, Block, FuncType, FuncDef, CompUnit, UnaryOp, Exp, BinaryOp};
 
 // lalrpop 里的约定
 grammar;
@@ -25,7 +25,58 @@ FuncType: FuncType = "int" => FuncType::Int;
 
 Block: Block = "{" <stmt: Stmt> "}" => Block { <> };
 
-Stmt: Stmt = "return" <num: Number> ";" => Stmt { <> };
+Stmt: Stmt = "return" <exp: Exp> ";" => Stmt { <> };
+
+Exp: Box<Exp> = <addexp: AddExp> => <>;
+
+PrimaryExp: Box<Exp> = {
+  <num: Number> => Box::new(Exp::Number{ <> }),
+  "(" <exp: Exp> ")" => <>,
+}
+
+UnaryExp: Box<Exp> = {
+  <primaryexp: PrimaryExp> => <>,
+  <op: UnaryOp> <unaryexp: UnaryExp> =>
+    Box::new(Exp::UnaryExp {
+      op: op,
+      exp: unaryexp
+    }),
+}
+
+MulExp: Box<Exp> = {
+  <unaryexp: UnaryExp> => <>,
+  <mulexp: MulExp> <op: MulOp> <unaryexp: UnaryExp> => Box::new(Exp::BinaryExp {
+    lhs: mulexp,
+    op: op,
+    rhs: unaryexp,
+  }),
+}
+
+AddExp: Box<Exp> = {
+  <mulexp: MulExp> => <>,
+  <addexp: AddExp> <op: AddOp> <mulexp: MulExp> => Box::new(Exp::BinaryExp {
+    lhs: addexp,
+    op: op,
+    rhs: mulexp,
+  }),
+}
+
+UnaryOp: UnaryOp = {
+  "+" => UnaryOp::Pos,
+  "-" => UnaryOp::Neg,
+  "!" => UnaryOp::Not,
+}
+
+MulOp: BinaryOp = {
+  "*" => BinaryOp::Mul,
+  "/" => BinaryOp::Div,
+  "%" => BinaryOp::Mod,
+}
+
+AddOp: BinaryOp = {
+  "+" => BinaryOp::Add,
+  "-" => BinaryOp::Sub,
+}
 
 Number: i32 = <num: IntConst> => <>;
 

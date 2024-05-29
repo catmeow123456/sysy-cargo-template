@@ -1,5 +1,4 @@
-int main()
-{
+int main() {
     // 忽略
-    return 0x3333; // 返回 0x233
+    return  1 * (2 + -3); // 返回 0x233
 }

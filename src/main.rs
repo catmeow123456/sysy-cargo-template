@@ -31,6 +31,7 @@ fn main() -> Result<()> {
     println!("{:#?}", ast);
 
     let result = ast.dump();
+    // let result = "unknown";
     println!("{}", result);
     if mode == "-o" {
       let mut output = File::create(output)?;
