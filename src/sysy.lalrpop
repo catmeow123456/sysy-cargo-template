@@ -27,7 +27,7 @@ Block: Block = "{" <stmt: Stmt> "}" => Block { <> };
 
 Stmt: Stmt = "return" <exp: Exp> ";" => Stmt { <> };
 
-Exp: Box<Exp> = <addexp: AddExp> => <>;
+Exp: Box<Exp> = <lorexp: LOrExp> => <>;
 
 PrimaryExp: Box<Exp> = {
   <num: Number> => Box::new(Exp::Number{ <> }),
@@ -43,39 +43,91 @@ UnaryExp: Box<Exp> = {
     }),
 }
 
-MulExp: Box<Exp> = {
-  <unaryexp: UnaryExp> => <>,
-  <mulexp: MulExp> <op: MulOp> <unaryexp: UnaryExp> => Box::new(Exp::BinaryExp {
-    lhs: mulexp,
-    op: op,
-    rhs: unaryexp,
-  }),
-}
-
-AddExp: Box<Exp> = {
-  <mulexp: MulExp> => <>,
-  <addexp: AddExp> <op: AddOp> <mulexp: MulExp> => Box::new(Exp::BinaryExp {
-    lhs: addexp,
-    op: op,
-    rhs: mulexp,
-  }),
-}
-
 UnaryOp: UnaryOp = {
   "+" => UnaryOp::Pos,
   "-" => UnaryOp::Neg,
   "!" => UnaryOp::Not,
 }
 
-MulOp: BinaryOp = {
-  "*" => BinaryOp::Mul,
-  "/" => BinaryOp::Div,
-  "%" => BinaryOp::Mod,
+MulExp: Box<Exp> = {
+  <unaryexp: UnaryExp> => <>,
+  <mulexp: MulExp> "*" <unaryexp: UnaryExp> => Box::new(Exp::BinaryExp {
+    lhs: mulexp,
+    op: BinaryOp::Mul,
+    rhs: unaryexp,
+  }),
+  <mulexp: MulExp> "/" <unaryexp: UnaryExp> => Box::new(Exp::BinaryExp {
+    lhs: mulexp,
+    op: BinaryOp::Div,
+    rhs: unaryexp,
+  }),
+  <mulexp: MulExp> "%" <unaryexp: UnaryExp> => Box::new(Exp::BinaryExp {
+    lhs: mulexp,
+    op: BinaryOp::Mod,
+    rhs: unaryexp,
+  }),
 }
 
-AddOp: BinaryOp = {
-  "+" => BinaryOp::Add,
-  "-" => BinaryOp::Sub,
+AddExp: Box<Exp> = {
+  <mulexp: MulExp> => <>,
+  <addexp: AddExp> "+" <mulexp: MulExp> => Box::new(Exp::BinaryExp {
+    lhs: addexp,
+    op: BinaryOp::Add,
+    rhs: mulexp,
+  }),
+  <addexp: AddExp> "-" <mulexp: MulExp> => Box::new(Exp::BinaryExp {
+    lhs: addexp,
+    op: BinaryOp::Sub,
+    rhs: mulexp,
+  }),
+}
+
+RelExp: Box<Exp> = {
+  <addexp: AddExp> => <>,
+  <relexp: RelExp> <op: RelOp> <addexp: AddExp> => Box::new(Exp::BinaryExp {
+    lhs: relexp,
+    op: op,
+    rhs: addexp,
+  }),
+}
+
+RelOp: BinaryOp = {
+  "<" => BinaryOp::Lt,
+  "<=" => BinaryOp::Le,
+  ">" => BinaryOp::Gt,
+  ">=" => BinaryOp::Ge,
+}
+
+EqExp: Box<Exp> = {
+  <relexp: RelExp> => <>,
+  <eqexp: EqExp> "==" <relexp: RelExp> => Box::new(Exp::BinaryExp {
+    lhs: eqexp,
+    op: BinaryOp::Eq,
+    rhs: relexp,
+  }),
+  <eqexp: EqExp> "!=" <relexp: RelExp> => Box::new(Exp::BinaryExp {
+    lhs: eqexp,
+    op: BinaryOp::Ne,
+    rhs: relexp,
+  }),
+}
+
+LAndExp: Box<Exp> = {
+  <eqexp: EqExp> => <>,
+  <landexp: LAndExp> "&&" <eqexp: EqExp> => Box::new(Exp::BinaryExp {
+    lhs: Box::new(Exp::BinaryExp {lhs: landexp, op: BinaryOp::Ne, rhs: Box::new(Exp::Number{num: 0})}),
+    op: BinaryOp::And,
+    rhs: Box::new(Exp::BinaryExp {lhs: eqexp, op: BinaryOp::Ne, rhs: Box::new(Exp::Number{num: 0})}),
+  }),
+}
+
+LOrExp: Box<Exp> = {
+  <landexp: LAndExp> => <>,
+  <lorexp: LOrExp> "||" <landexp: LAndExp> => Box::new(Exp::BinaryExp {
+    lhs: Box::new(Exp::BinaryExp {lhs: lorexp, op: BinaryOp::Ne, rhs: Box::new(Exp::Number{num: 0})}),
+    op: BinaryOp::Or,
+    rhs: Box::new(Exp::BinaryExp {lhs: landexp, op: BinaryOp::Ne, rhs: Box::new(Exp::Number{num: 0})}),
+  }),
 }
 
 Number: i32 = <num: IntConst> => <>;

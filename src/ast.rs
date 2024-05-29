@@ -54,6 +54,14 @@ pub enum BinaryOp {
   Mul,
   Div,
   Mod,
+  Lt,
+  Le,
+  Gt,
+  Ge,
+  Eq,
+  Ne,
+  And,
+  Or,
 }
 
 impl CompUnit {
@@ -121,12 +129,6 @@ impl Exp {
         }
       }
       Exp::BinaryExp { ref lhs, op, ref rhs } => {
-        // Info {
-        //   context: "hello world".to_string(),
-        //   expr: "123".to_string(),
-        //   id_begin: 0,
-        //   id_end: 0,
-        // }
         let lhs_info = lhs.dump(id);
         let rhs_info = rhs.dump(lhs_info.id_end);
         Info {
@@ -149,8 +151,16 @@ impl BinaryOp {
       BinaryOp::Add => "add".to_string(),
       BinaryOp::Sub => "sub".to_string(),
       BinaryOp::Mul => "mul".to_string(),
-      BinaryOp::Div => "sdiv".to_string(),
-      BinaryOp::Mod => "srem".to_string(),
+      BinaryOp::Div => "div".to_string(),
+      BinaryOp::Mod => "mod".to_string(),
+      BinaryOp::Lt => "lt".to_string(),
+      BinaryOp::Le => "le".to_string(),
+      BinaryOp::Gt => "gt".to_string(),
+      BinaryOp::Ge => "ge".to_string(),
+      BinaryOp::Eq => "eq".to_string(),
+      BinaryOp::Ne => "ne".to_string(),
+      BinaryOp::And => "and".to_string(),
+      BinaryOp::Or => "or".to_string(),
     }
   }
 }
